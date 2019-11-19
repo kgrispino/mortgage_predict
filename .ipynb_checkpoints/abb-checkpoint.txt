@@ -1,0 +1,47 @@
+import pandas as pd
+import numpy as np
+from sklearn import datasets
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from matplotlib.colors import ListedColormap
+import matplotlib.pyplot as plt
+from sklearn.svm import SVC
+import pickle
+
+%pylab inline
+pylab.rcParams['figure.figsize'] = (10, 6)
+
+train = pd.read_csv('train_values.csv')
+X = train[[col for col in train.columns if col != 'rate_spread']]
+X = X[[col for col in X.columns if col != 'row_id']]
+y = train['rate_spread']
+
+X = X.values
+y = y.values
+
+# Print the unique labels of the dataset
+print('\n' + 'The unique labels in this data are ' + str(np.unique(y)))
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.3, random_state=0)
+print('There are {} samples in the training set and {} samples in the test set'.format(
+X_train.shape[0], X_test.shape[0]))
+
+sc = StandardScaler()
+
+sc.fit(X_train)
+
+X_train_std = sc.transform(X_train)
+X_test_std = sc.transform(X_test)
+
+print('After standardizing our features, the first 5 rows of our data now look like this:\n')
+pd.DataFrame(X_train_std).head()
+
+svm = SVC(kernel='rbf', random_state=0, gamma=.10, C=1.0)
+svm.fit(X_train_std, y_train)
+
+print('The accuracy of the svm classifier on training data is {:.2f} out of 1'.format(svm.score(X_train_std, y_train)))
+
+print('The accuracy of the svm classifier on test data is {:.2f} out of 1'.format(svm.score(X_test_std, y_test)))
+
+filename = 'finalized_model.sav'
+pickle.dump(model, open(filename, 'wb'))
